@@ -24,5 +24,9 @@
   "homepage": "https://github.com/RaphaelDeLaGhetto/gebo-blog-action",
   "dependencies": {
     "mongoose": "^3.8.11"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-nodeunit": "^0.4.0"
   }
 }
