@@ -1,0 +1,25 @@
+{
+  "name": "gebo-blog-action",
+  "version": "0.0.0",
+  "description": "Blog actions for the gebo agent",
+  "main": "index.js",
+  "scripts": {
+    "test": "grunt nodeunit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RaphaelDeLaGhetto/gebo-blog-action.git"
+  },
+  "keywords": [
+    "gebo",
+    "agent",
+    "blog",
+    "action"
+  ],
+  "author": "Daniel Bidulock",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/RaphaelDeLaGhetto/gebo-blog-action/issues"
+  },
+  "homepage": "https://github.com/RaphaelDeLaGhetto/gebo-blog-action"
+}
