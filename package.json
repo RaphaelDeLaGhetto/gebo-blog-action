@@ -21,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/RaphaelDeLaGhetto/gebo-blog-action/issues"
   },
-  "homepage": "https://github.com/RaphaelDeLaGhetto/gebo-blog-action"
+  "homepage": "https://github.com/RaphaelDeLaGhetto/gebo-blog-action",
+  "dependencies": {
+    "mongoose": "^3.8.11"
+  }
 }
