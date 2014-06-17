@@ -23,7 +23,10 @@
   },
   "homepage": "https://github.com/RaphaelDeLaGhetto/gebo-blog-action",
   "dependencies": {
-    "mongoose": "^3.8.11"
+    "gebo-mongoose-connection": "0.0.2",
+    "gebo-utils": "0.0.1",
+    "nconf": "^0.6.9",
+    "q": "^1.0.1"
   },
   "devDependencies": {
     "grunt": "^0.4.5",
