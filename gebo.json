@@ -1,0 +1,10 @@
+{
+    "name":"gebo-blog-action",
+    "email":"gebo-blog-action@example.com",
+    "domain":"https://localhost",
+    "port":3000,
+    "httpsPort":3443,
+    "docs": "docs",
+    "cachify":false,
+    "testEmail": "gebo-blog-action-test@example.com"
+}
