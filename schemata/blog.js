@@ -1,51 +1,66 @@
+'use strict';
 
-var mongoose = require('mongoose');
+var geboMongoose = require('gebo-mongoose-connection');
 
-modules.exports = function(email) {
+module.exports = function() {
 
-    /**
-     *  Database config
-     */
-    var uristring =
-            process.env.MONGOLAB_URI ||
-            process.env.MONGOHQ_URL ||
-            'mongodb://localhost/' + dbName;
-
-    var mongoOptions = { db: { safe: true } };
-
-    /**
-     * Connect to mongo
-     */
-    var connection = mongoose.createConnection(uristring, mongoOptions);
-
-    connection.on('open', function() {
-        console.log ('Successfully connected to: ' + uristring);
-      });
-
-    connection.on('error', function(err) {
-        console.log ('ERROR connecting to: ' + uristring + '. ' + err);
-      });
-
-    exports.connection = connection;
+    var mongoose = geboMongoose.get();
 
     var Schema = mongoose.Schema,
         ObjectId = Schema.Types.ObjectId;
 
+    exports.connection = mongoose.connection;
+
     /**
-     * Simple blog schema
+     * Blogs
      */
     var blogSchema = new Schema({
-        headline: { type: String, required: true },
-        slug: { type: String, required: true },
-        body: { type: String, required: true },
-        date: { type: Date, required: true, default: Date.now() },
-        published: { type: Boolean, required: true, default: false },
+        title: { type: String, required: true, unique: false },
       });
 
-    // Export blog schema
+    // Export comment schema
     try {
-      var blogModel = connection.model('Blog', blogSchema);
-          exports.blogModel = blogModel;
+      var blogModel = mongoose.model('Blog', blogSchema);
+      exports.blogModel = blogModel;
+    }
+    catch (error) {}
+
+
+    /**
+     * Comments
+     */
+    var commentSchema = new Schema({
+        byline: { type: String, required: true },
+        body: { type: String, required: true },
+        date: { type: Date, required: true, default: Date.now() },
+      });
+
+    // Export comment schema
+    try {
+      var commentModel = mongoose.model('Comment', commentSchema);
+      exports.commentModel = commentModel;
+    }
+    catch (error) {}
+
+    /**
+     * Posts
+     */
+    var postSchema = new Schema({
+        blogId: { type: ObjectId, require: true },
+        headline: { type: String, required: true },
+        byline: { type: String, required: true },
+        lead: { type: String, required: false },
+        body: { type: String, required: false },
+        date: { type: Date, required: true, default: Date.now() },
+        published: { type: Boolean, required: true, default: false },
+        comments: [commentSchema],
+        commentsAllowed: { type: Boolean, required: true, default: false },
+      });
+
+    // Export post schema
+    try {
+      var postModel = mongoose.model('Post', postSchema);
+      exports.postModel = postModel;
     }
     catch (error) {}
 
