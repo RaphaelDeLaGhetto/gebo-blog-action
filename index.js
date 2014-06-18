@@ -226,6 +226,37 @@ module.exports = function () {
         return deferred.promise;
       };
 
+    /**
+     * Modify commenting on the given post
+     *
+     * @param Object
+     * @param Object
+     * 
+     * @return Promise
+     */
+    exports.allowComments = function(verified, message) {
+        var deferred = q.defer();
+        if (verified.admin || verified.write) {
+          if (message.content && message.content.id && typeof message.content.allow === 'boolean') {
+            blogDb.postModel.findOneAndUpdate({ _id: message.content.id }, { commentsAllowed: message.content.allow }, function(err, post) {
+                if (err) {
+                  deferred.reject(err);
+                }
+                else {    
+                  deferred.resolve(post);
+                }
+              });
+          }
+          else {
+            deferred.reject('On which post do you want to modify commenting?');
+          }
+        }
+        else {
+          deferred.reject('You are not permitted to request or propose that action');
+        }
+        return deferred.promise;
+      };
+
 
     return exports;
 };
