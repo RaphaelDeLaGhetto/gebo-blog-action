@@ -30,6 +30,7 @@ module.exports = function() {
      * Comments
      */
     var commentSchema = new Schema({
+        postId: { type: ObjectId, require: true },
         byline: { type: String, required: true },
         body: { type: String, required: true },
         date: { type: Date, required: true, default: Date.now() },
@@ -53,7 +54,6 @@ module.exports = function() {
         body: { type: String, required: false },
         date: { type: Date, required: true, default: Date.now() },
         published: { type: Boolean, required: true, default: false },
-        comments: [commentSchema],
         commentsAllowed: { type: Boolean, required: true, default: false },
       });
 
