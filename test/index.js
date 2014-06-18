@@ -252,6 +252,61 @@ exports.savePost = {
               });
     },
 
+    'Should overwrite existing post if post ID already exists': function(test) {
+        test.expect(15);
+        actions.savePost({ resource: 'blogs', write: true },
+                         { content: {
+                                        blogId: _id,
+                                        headline: 'My cat\'s breath smells like cat food',
+                                        byline: 'Ralph Wiggum',
+                                    }
+                         }).
+            then(function(post) {
+                test.equal(post.blogId.toString(), _id.toString());
+                test.equal(post.headline, 'My cat\'s breath smells like cat food');
+                test.equal(post.byline, 'Ralph Wiggum');
+                test.ok(!!post.date);
+                test.equal(post.published, false);
+                test.equal(post.commentsAllowed, false);
+
+                // Make sure the post has been saved 
+                blogDb.postModel.find({}, function(err, posts) {
+                    test.equal(posts.length, 1);
+                    test.equal(posts[0].headline, 'My cat\'s breath smells like cat food');
+
+                    // Attempt to update the post
+                    actions.savePost({ resource: 'blogs', write: true },
+                                     { content: {
+                                                    _id: post._id,
+                                                    headline: 'My dog\'s breath smells like cat food',
+                                                    published: true,
+                                                    commentsAllowed: true,
+                                                }
+                                     }).
+                        then(function(post) {
+                            blogDb.postModel.find({}, function(err, updatedPosts) {
+                                test.equal(updatedPosts.length, 1);
+                                test.equal(updatedPosts[0].blogId.toString(), _id.toString());
+                                test.equal(updatedPosts[0].headline, 'My dog\'s breath smells like cat food');
+                                test.equal(updatedPosts[0].byline, 'Ralph Wiggum');
+                                test.ok(!!updatedPosts[0].date);
+                                test.equal(updatedPosts[0].published, true);
+                                test.equal(updatedPosts[0].commentsAllowed, true);
+                                test.done();
+                              });
+                          }).
+                        catch(function(err) {
+                            test.ok(false, err);
+                            test.done();
+                          });
+                  });
+              }).
+            catch(function(err) {
+                test.ok(false, err);
+                test.done();
+              });
+    },
+
     'Should add a document to the blog collection for an admin': function(test) {
         test.expect(13);
 
@@ -1103,5 +1158,4 @@ exports.disallowComments = {
               });
     },
 };
-
 

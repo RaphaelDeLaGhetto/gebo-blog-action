@@ -79,7 +79,19 @@ module.exports = function () {
     exports.savePost = function(verified, message) {
         var deferred = q.defer();
         if (verified.admin || verified.write) {
-          if (message.content) {
+          if (message.content && message.content._id) {
+            var id = message.content._id;
+            delete message.content._id;
+            blogDb.postModel.findByIdAndUpdate(id, message.content, { upsert: true }, function(err, savedPost) {
+                if (err) {
+                  deferred.reject(err);
+                }
+                else {    
+                  deferred.resolve(savedPost);
+                }
+              });
+          }
+          else if (message.content) {
             var post = new blogDb.postModel(message.content);
             post.save(function(err, savedPost) {
                 if (err) {
