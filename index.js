@@ -195,6 +195,37 @@ module.exports = function () {
         return deferred.promise;
       };
 
+    /**
+     * Delete comment from the comment collection 
+     *
+     * @param Object
+     * @param Object
+     * 
+     * @return Promise
+     */
+    exports.deleteComment = function(verified, message) {
+        var deferred = q.defer();
+        if (verified.admin || verified.write) {
+          if (message.content && message.content.id) {
+            blogDb.commentModel.findByIdAndRemove(message.content.id, function(err, post) {
+                if (err) {
+                  deferred.reject(err);
+                }
+                else {    
+                  deferred.resolve(post);
+                }
+              });
+          }
+          else {
+            deferred.reject('Which comment do you want to delete?');
+          }
+        }
+        else {
+          deferred.reject('You are not permitted to request or propose that action');
+        }
+        return deferred.promise;
+      };
+
 
     return exports;
 };

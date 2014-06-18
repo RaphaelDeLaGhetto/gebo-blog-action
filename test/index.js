@@ -374,7 +374,7 @@ exports.deletePost = {
 
     'Should delete the post from the database for an admin': function(test) {
         test.expect(2);
-        actions.deletePost({ resource: 'blogs', write: true },
+        actions.deletePost({ resource: 'blogs', admin: true },
                            { content: { id: _id } }).
             then(function(ack) {
                 test.ok(ack);
@@ -778,6 +778,44 @@ exports.saveComment = {
  */
 exports.deleteComment = {
 
+    setUp: function(callback) {
+        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        blog.save(function(err, savedBlog) {
+            if (err) {
+              console.log(err);
+            }
+            actions.savePost({ resource: 'blogs', admin: true },
+                             { content: {
+                                            blogId: savedBlog._id,
+                                            headline: 'My cat\'s breath smells like cat food',
+                                            byline: 'Ralph Wiggum',
+                                            published: true,
+                                        }
+                             }).
+                then(function(post) {
+                    actions.saveComment({ resource: 'blogs', admin: true },
+                                        { content: {
+                                                       postId: post._id,
+                                                       byline: 'Chief Wiggum',
+                                                       body: 'That\'s right, Ralphy',
+                                                   }
+                                        }).
+                        then(function(comment) {
+                            _id = comment._id;
+                            callback();
+                          }).
+                        catch(function(err) {
+                            console.log(err);
+                            callback();
+                          });
+                  }).
+                catch(function(err) {
+                    console.log(err);
+                    callback();
+                  });
+          });
+    },
+
     tearDown: function(callback) {
         blogDb.connection.db.dropDatabase(function(err) {
             if (err) {
@@ -788,8 +826,68 @@ exports.deleteComment = {
     },
 
 
-    'Should remove a comment from a blog post': function(test) {
-        test.done();
+    'Should delete the comment from the collection for an authorized user': function(test) {
+        test.expect(2);
+        actions.deleteComment({ resource: 'blogs', write: true },
+                              { content: { id: _id } }).
+            then(function(ack) {
+                test.ok(ack);
+                blogDb.commentModel.find({}, function(err, comments) {
+                    test.equal(comments.length, 0);
+                    test.done();
+                  });
+              }).
+            catch(function(err) {
+                test.ok(false, err); 
+                test.done();
+              });
+    },
+
+    'Should delete the comment from the collection for an admin': function(test) {
+        test.expect(2);
+        actions.deleteComment({ resource: 'blogs', admin: true },
+                              { content: { id: _id } }).
+            then(function(ack) {
+                test.ok(ack);
+                blogDb.commentModel.find({}, function(err, comments) {
+                    test.equal(comments.length, 0);
+                    test.done();
+                  });
+              }).
+            catch(function(err) {
+                test.ok(false, err); 
+                test.done();
+              });
+    },
+
+    'Should do nothing for an unauthorized agent': function(test) {
+        test.expect(1);
+        actions.deleteComment({ resource: 'blogs' },
+                              { content: { id: _id } }).
+            then(function(ack) {
+                test.ok(false, 'Shouldn\'t get here');
+                test.done();
+              }).
+            catch(function(err) {
+                test.equal(err, 'You are not permitted to request or propose that action');
+                test.done();
+              });
+    },
+
+    'Should not barf if the post\'s ID is not included in the message content': function(test) {
+        test.expect(1);
+        actions.deleteComment({ resource: 'blogs', write: true }, {}).
+            then(function(ack) {
+                test.ok(ack);
+                blogDb.postModel.findById(_id, function(err, post) {
+                    test.ok(false, 'Shouldn\'t get here');
+                    test.done();
+                  });
+              }).
+            catch(function(err) {
+                test.equal(err, 'Which comment do you want to delete?');
+                test.done();
+              });
     },
 };
 
