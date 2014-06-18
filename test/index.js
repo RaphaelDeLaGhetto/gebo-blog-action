@@ -637,6 +637,143 @@ exports.unpublishPost = {
 };
 
 /**
+ * saveComment
+ */
+exports.saveComment = {
+
+    setUp: function(callback) {
+        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        blog.save(function(err, savedBlog) {
+            if (err) {
+              console.log(err);
+            }
+            actions.savePost({ resource: 'blogs', admin: true },
+                             { content: {
+                                            blogId: _id,
+                                            headline: 'My cat\'s breath smells like cat food',
+                                            byline: 'Ralph Wiggum',
+                                            published: true,
+                                        }
+                             }).
+                then(function(post) {
+                    _id = post._id;
+                    callback();
+                  }).
+                catch(function(err) {
+                    console.log(err);
+                    callback();
+                  });
+          });
+    },
+
+    tearDown: function(callback) {
+        blogDb.connection.db.dropDatabase(function(err) {
+            if (err) {
+              console.log(err);
+            }
+            callback();
+          });
+    },
+
+    'Should save a document to the comment collection for an authorized agent': function(test) {
+        test.expect(9);
+
+        actions.saveComment({ resource: 'blogs', write: true },
+                            { content: {
+                                           postId: _id,
+                                           byline: 'Chief Wiggum',
+                                           body: 'That\'s right, Ralphy',
+                                       }
+                            }).
+            then(function(comment) {
+                test.equal(comment.postId.toString(), _id.toString());
+                test.equal(comment.byline, 'Chief Wiggum');
+                test.equal(comment.body, 'That\'s right, Ralphy');
+                test.ok(!!comment.date);
+
+                // Make sure the post has been saved 
+                blogDb.commentModel.find({}, function(err, comment) {
+                    test.equal(comment.length, 1);
+                    test.equal(comment[0].postId.toString(), _id.toString());
+                    test.equal(comment[0].byline, 'Chief Wiggum');
+                    test.equal(comment[0].body, 'That\'s right, Ralphy');
+                    test.ok(!!comment[0].date);
+                    test.done();
+                  });
+              }).
+            catch(function(err) {
+                test.ok(false, err);
+                test.done();
+              });
+    },
+
+    'Should save a document to the comment collection for an admin': function(test) {
+        test.expect(9);
+
+        actions.saveComment({ resource: 'blogs', write: true },
+                            { content: {
+                                           postId: _id,
+                                           byline: 'Chief Wiggum',
+                                           body: 'That\'s right, Ralphy',
+                                       }
+                            }).
+            then(function(comment) {
+                test.equal(comment.postId.toString(), _id.toString());
+                test.equal(comment.byline, 'Chief Wiggum');
+                test.equal(comment.body, 'That\'s right, Ralphy');
+                test.ok(!!comment.date);
+
+                // Make sure the post has been saved 
+                blogDb.commentModel.find({}, function(err, comment) {
+                    test.equal(comment.length, 1);
+                    test.equal(comment[0].postId.toString(), _id.toString());
+                    test.equal(comment[0].byline, 'Chief Wiggum');
+                    test.equal(comment[0].body, 'That\'s right, Ralphy');
+                    test.ok(!!comment[0].date);
+                    test.done();
+                  });
+              }).
+            catch(function(err) {
+                test.ok(false, err);
+                test.done();
+              });
+    },
+
+    'Should not save a document to the collection if not authorized': function(test) {
+        test.expect(1);
+        actions.saveComment({ resource: 'blogs' },
+                            { content: {
+                                           postId: _id,
+                                           byline: 'Chief Wiggum',
+                                           body: 'That\'s right, Ralphy',
+                                       }
+                            }).
+            then(function(blog) {
+                test.ok(false, 'Shouldn\'t get here');
+                test.done();
+              }).
+            catch(function(err) {
+                test.equal(err, 'You are not permitted to request or propose that action');
+                test.done();
+              });
+    },
+
+    'Should not barf if the post isn\'t included in the message contents': function(test) {
+        test.expect(1);
+        actions.saveComment({ resource: 'blogs', write: true }, {}).
+            then(function(blog) {
+                test.ok(false, 'Shouldn\'t get here');
+                test.done();
+              }).
+            catch(function(err) {
+                test.equal(err, 'Upon what are you commenting? You\'re missing something');
+                test.done();
+              });
+    },
+};
+
+
+/**
  * deleteComment 
  */
 exports.deleteComment = {
@@ -655,3 +792,8 @@ exports.deleteComment = {
         test.done();
     },
 };
+
+/**
+ * allowComments
+ */
+

@@ -163,6 +163,38 @@ module.exports = function () {
         return deferred.promise;
       };
 
+    /**
+     * Save a comment to the comments collection 
+     *
+     * @param Object
+     * @param Object
+     * 
+     * @return Promise
+     */
+    exports.saveComment = function(verified, message) {
+        var deferred = q.defer();
+        if (verified.admin || verified.write) {
+          if (message.content) {
+            var comment = new blogDb.commentModel(message.content);
+            comment.save(function(err, savedComment) {
+                if (err) {
+                  deferred.reject(err);
+                }
+                else {    
+                  deferred.resolve(savedComment);
+                }
+              });
+          }
+          else {
+            deferred.reject('Upon what are you commenting? You\'re missing something');
+          }
+        }
+        else {
+          deferred.reject('You are not permitted to request or propose that action');
+        }
+        return deferred.promise;
+      };
+
 
     return exports;
 };
