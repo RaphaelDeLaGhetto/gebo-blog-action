@@ -316,6 +316,110 @@ exports.savePost = {
     },
 };
 
+/**
+ * deletePost 
+ */
+exports.deletePost = {
+
+    setUp: function(callback) {
+        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        blog.save(function(err, savedBlog) {
+            if (err) {
+              console.log(err);
+            }
+            actions.savePost({ resource: 'blogs', admin: true },
+                             { content: {
+                                            blogId: _id,
+                                            headline: 'My cat\'s breath smells like cat food',
+                                            byline: 'Ralph Wiggum',
+                                        }
+                             }).
+                then(function(post) {
+                    _id = post._id;
+                    callback();
+                  }).
+                catch(function(err) {
+                    console.log(err);
+                    callback();
+                  });
+          });
+    },
+
+
+    tearDown: function(callback) {
+        blogDb.connection.db.dropDatabase(function(err) {
+            if (err) {
+              console.log(err);
+            }
+            callback();
+          });
+    },
+
+    'Should delete the post from the database for an authorized user': function(test) {
+        test.expect(2);
+        actions.deletePost({ resource: 'blogs', write: true },
+                           { content: { id: _id } }).
+            then(function(ack) {
+                test.ok(ack);
+                blogDb.postModel.find({}, function(err, posts) {
+                    test.equal(posts.length, 0);
+                    test.done();
+                  });
+              }).
+            catch(function(err) {
+                test.ok(false, err); 
+                test.done();
+              });
+    },
+
+    'Should delete the post from the database for an admin': function(test) {
+        test.expect(2);
+        actions.deletePost({ resource: 'blogs', write: true },
+                           { content: { id: _id } }).
+            then(function(ack) {
+                test.ok(ack);
+                blogDb.postModel.find({}, function(err, posts) {
+                    test.equal(posts.length, 0);
+                    test.done();
+                  });
+              }).
+            catch(function(err) {
+                test.ok(false, err); 
+                test.done();
+              });
+    },
+
+    'Should do nothing for an unauthorized agent': function(test) {
+        test.expect(1);
+        actions.deletePost({ resource: 'blogs' },
+                           { content: { id: _id } }).
+            then(function(ack) {
+                test.ok(false, 'Shouldn\'t get here');
+                test.done();
+              }).
+            catch(function(err) {
+                test.equal(err, 'You are not permitted to request or propose that action');
+                test.done();
+              });
+    },
+
+    'Should not barf if the post\'s ID is not included in the message content': function(test) {
+        test.expect(1);
+        actions.deletePost({ resource: 'blogs', write: true }, {}).
+            then(function(ack) {
+                test.ok(ack);
+                blogDb.postModel.findById(_id, function(err, post) {
+                    test.ok(false, 'Shouldn\'t get here');
+                    test.done();
+                  });
+              }).
+            catch(function(err) {
+                test.equal(err, 'Which post do you want to delete?');
+                test.done();
+              });
+    },
+};
+
 
 /**
  * publishPost 
@@ -529,25 +633,6 @@ exports.unpublishPost = {
                 test.equal(err, 'Which post do you want to publish?');
                 test.done();
               });
-    },
-};
-
-/**
- * deletePost 
- */
-exports.deletePost = {
-
-    tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
-            if (err) {
-              console.log(err);
-            }
-            callback();
-          });
-    },
-
-    'Should remove the post from the blog': function(test) {
-        test.done();
     },
 };
 

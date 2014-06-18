@@ -101,6 +101,38 @@ module.exports = function () {
       };
 
     /**
+     * Delete post from database 
+     *
+     * @param Object
+     * @param Object
+     * 
+     * @return Promise
+     */
+    exports.deletePost = function(verified, message) {
+        var deferred = q.defer();
+        if (verified.admin || verified.write) {
+          if (message.content && message.content.id) {
+            blogDb.postModel.findByIdAndRemove(message.content.id, function(err, post) {
+                if (err) {
+                  deferred.reject(err);
+                }
+                else {    
+                  deferred.resolve(post);
+                }
+              });
+          }
+          else {
+            deferred.reject('Which post do you want to delete?');
+          }
+        }
+        else {
+          deferred.reject('You are not permitted to request or propose that action');
+        }
+        return deferred.promise;
+      };
+
+
+    /**
      * Set a post's published flag to true
      *
      * @param Object
