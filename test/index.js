@@ -5,9 +5,7 @@
  */
 var mongoose = require('gebo-mongoose-connection').get(true);
 
-var actions = require('..')(),
-    blogDb = require('../schemata/blog')(),
-    utils = require('gebo-utils');
+var actionModule = require('..');
 
 // Stores the various object IDs created in the setUps
 var _id;
@@ -17,7 +15,7 @@ var _id;
  */
 exports.createBlog = {
     tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
+        actionModule.schemata.connection.db.dropDatabase(function(err) {
             if (err) {
               console.log(err);
             }
@@ -29,13 +27,13 @@ exports.createBlog = {
         test.expect(3);
 
         // Make sure there are no blogs in the database
-        blogDb.blogModel.find({}, function(err, blogs) {
+        actionModule.schemata.blogModel.find({}, function(err, blogs) {
             if (err) {
               console.log(err);
             }
             test.equal(blogs.length, 0);
-            actions.createBlog({ resource: 'blogs', write: true },
-                               { content: { title: 'My cool new blog' } }).
+            actionModule.actions.createBlog({ resource: 'blogs', write: true },
+                                            { content: { title: 'My cool new blog' } }).
                 then(function(blog) {
                     test.equal(blog.title, 'My cool new blog');
                     test.ok(!!blog._id);
@@ -52,13 +50,13 @@ exports.createBlog = {
         test.expect(3);
 
         // Make sure there are no blogs in the database
-        blogDb.blogModel.find({}, function(err, blogs) {
+        actionModule.schemata.blogModel.find({}, function(err, blogs) {
             if (err) {
               console.log(err);
             }
             test.equal(blogs.length, 0);
-            actions.createBlog({ resource: 'blogs', admin: true },
-                               { content: { title: 'My cool new blog' } }).
+            actionModule.actions.createBlog({ resource: 'blogs', admin: true },
+                                            { content: { title: 'My cool new blog' } }).
                 then(function(blog) {
                     test.equal(blog.title, 'My cool new blog');
                     test.ok(!!blog._id);
@@ -73,8 +71,8 @@ exports.createBlog = {
 
     'Should not add a new blog to the database if agent\'s not authorized': function(test) {
         test.expect(1);
-        actions.createBlog({ resource: 'blogs' },
-                           { content: { title: 'My cool new blog' } }).
+        actionModule.actions.createBlog({ resource: 'blogs' },
+                                        { content: { title: 'My cool new blog' } }).
             then(function(blog) {
                 test.ok(false, 'Shouldn\'t get here');
                 test.done();
@@ -87,7 +85,7 @@ exports.createBlog = {
 
     'Should not barf if the blog title not is not specified': function(test) {
         test.expect(1);
-        actions.createBlog({ resource: 'blogs', write: true }, {}).
+        actionModule.actions.createBlog({ resource: 'blogs', write: true }, {}).
             then(function(blog) {
                 test.ok(false, 'Shouldn\'t get here');
                 test.done();
@@ -105,7 +103,7 @@ exports.createBlog = {
 exports.deleteBlog = {
 
     setUp: function(callback) {
-        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        var blog = new actionModule.schemata.blogModel({ title: 'Deep thoughts...' });
         blog.save(function(err, savedBlog) {
             if (err) {
               console.log(err);
@@ -116,7 +114,7 @@ exports.deleteBlog = {
     },
 
     tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
+        actionModule.schemata.connection.db.dropDatabase(function(err) {
             if (err) {
               console.log(err);
             }
@@ -127,12 +125,12 @@ exports.deleteBlog = {
     'Should remove a blog from the database for an authorized agent': function(test) {
         test.expect(2);
 
-        actions.deleteBlog({ resource: 'blogs', write: true },
-                           { content: { id: _id} }).
+        actionModule.actions.deleteBlog({ resource: 'blogs', write: true },
+                                        { content: { id: _id} }).
             then(function(ack) {
                 test.ok(ack);
                 // Make sure the collection is empty
-                blogDb.blogModel.find({}, function(err, blogs) {
+                actionModule.schemata.blogModel.find({}, function(err, blogs) {
                     test.equal(blogs.length, 0);
                     test.done();
                   });
@@ -146,12 +144,12 @@ exports.deleteBlog = {
     'Should remove a blog from the database for an admin': function(test) {
         test.expect(2);
 
-        actions.deleteBlog({ resource: 'blogs', admin: true },
-                           { content: { id: _id} }).
+        actionModule.actions.deleteBlog({ resource: 'blogs', admin: true },
+                                        { content: { id: _id} }).
             then(function(ack) {
                 test.ok(ack);
                 // Make sure the collection is empty
-                blogDb.blogModel.find({}, function(err, blogs) {
+                actionModule.schemata.blogModel.find({}, function(err, blogs) {
                     test.equal(blogs.length, 0);
                     test.done();
                   });
@@ -164,8 +162,8 @@ exports.deleteBlog = {
 
     'Should not delete a blog if the agent\'s not authorized': function(test) {
         test.expect(1);
-        actions.deleteBlog({ resource: 'blogs' },
-                           { content: { title: 'My cool new blog' } }).
+        actionModule.actions.deleteBlog({ resource: 'blogs' },
+                                        { content: { title: 'My cool new blog' } }).
             then(function(blog) {
                 test.ok(false, 'Shouldn\'t get here');
                 test.done();
@@ -178,7 +176,7 @@ exports.deleteBlog = {
 
     'Should not barf if the blog id is not specified': function(test) {
         test.expect(1);
-        actions.deleteBlog({ resource: 'blogs', write: true }, {}).
+        actionModule.actions.deleteBlog({ resource: 'blogs', write: true }, {}).
             then(function(blog) {
                 test.ok(false, 'Shouldn\'t get here');
                 test.done();
@@ -196,7 +194,7 @@ exports.deleteBlog = {
 exports.savePost = {
 
     setUp: function(callback) {
-        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        var blog = new actionModule.schemata.blogModel({ title: 'Deep thoughts...' });
         blog.save(function(err, savedBlog) {
             if (err) {
               console.log(err);
@@ -208,7 +206,7 @@ exports.savePost = {
 
 
     tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
+        actionModule.schemata.connection.db.dropDatabase(function(err) {
             if (err) {
               console.log(err);
             }
@@ -219,13 +217,13 @@ exports.savePost = {
     'Should add a document to the blog collection for an authorized agent': function(test) {
         test.expect(13);
 
-        actions.savePost({ resource: 'blogs', write: true },
-                         { content: {
-                                        blogId: _id,
-                                        headline: 'My cat\'s breath smells like cat food',
-                                        byline: 'Ralph Wiggum',
-                                    }
-                         }).
+        actionModule.actions.savePost({ resource: 'blogs', write: true },
+                                      { content: {
+                                                     blogId: _id,
+                                                     headline: 'My cat\'s breath smells like cat food',
+                                                     byline: 'Ralph Wiggum',
+                                                 }
+                                      }).
             then(function(post) {
                 test.equal(post.blogId.toString(), _id.toString());
                 test.equal(post.headline, 'My cat\'s breath smells like cat food');
@@ -235,7 +233,7 @@ exports.savePost = {
                 test.equal(post.commentsAllowed, false);
 
                 // Make sure the post has been saved 
-                blogDb.postModel.find({}, function(err, post) {
+                actionModule.schemata.postModel.find({}, function(err, post) {
                     test.equal(post.length, 1);
                     test.equal(post[0].blogId.toString(), _id.toString());
                     test.equal(post[0].headline, 'My cat\'s breath smells like cat food');
@@ -254,13 +252,13 @@ exports.savePost = {
 
     'Should overwrite existing post if post ID already exists': function(test) {
         test.expect(15);
-        actions.savePost({ resource: 'blogs', write: true },
-                         { content: {
-                                        blogId: _id,
-                                        headline: 'My cat\'s breath smells like cat food',
-                                        byline: 'Ralph Wiggum',
-                                    }
-                         }).
+        actionModule.actions.savePost({ resource: 'blogs', write: true },
+                                      { content: {
+                                                     blogId: _id,
+                                                     headline: 'My cat\'s breath smells like cat food',
+                                                     byline: 'Ralph Wiggum',
+                                                 }
+                                      }).
             then(function(post) {
                 test.equal(post.blogId.toString(), _id.toString());
                 test.equal(post.headline, 'My cat\'s breath smells like cat food');
@@ -270,21 +268,21 @@ exports.savePost = {
                 test.equal(post.commentsAllowed, false);
 
                 // Make sure the post has been saved 
-                blogDb.postModel.find({}, function(err, posts) {
+                actionModule.schemata.postModel.find({}, function(err, posts) {
                     test.equal(posts.length, 1);
                     test.equal(posts[0].headline, 'My cat\'s breath smells like cat food');
 
                     // Attempt to update the post
-                    actions.savePost({ resource: 'blogs', write: true },
-                                     { content: {
-                                                    _id: post._id,
-                                                    headline: 'My dog\'s breath smells like cat food',
-                                                    published: true,
-                                                    commentsAllowed: true,
-                                                }
-                                     }).
+                    actionModule.actions.savePost({ resource: 'blogs', write: true },
+                                                  { content: {
+                                                                 _id: post._id,
+                                                                 headline: 'My dog\'s breath smells like cat food',
+                                                                 published: true,
+                                                                 commentsAllowed: true,
+                                                             }
+                                                  }).
                         then(function(post) {
-                            blogDb.postModel.find({}, function(err, updatedPosts) {
+                            actionModule.schemata.postModel.find({}, function(err, updatedPosts) {
                                 test.equal(updatedPosts.length, 1);
                                 test.equal(updatedPosts[0].blogId.toString(), _id.toString());
                                 test.equal(updatedPosts[0].headline, 'My dog\'s breath smells like cat food');
@@ -310,7 +308,7 @@ exports.savePost = {
     'Should add a document to the blog collection for an admin': function(test) {
         test.expect(13);
 
-        actions.savePost({ resource: 'blogs', admin: true },
+        actionModule.actions.savePost({ resource: 'blogs', admin: true },
                          { content: {
                                         blogId: _id,
                                         headline: 'My cat\'s breath smells like cat food',
@@ -326,7 +324,7 @@ exports.savePost = {
                 test.equal(post.commentsAllowed, false);
 
                 // Make sure the post has been saved 
-                blogDb.postModel.find({}, function(err, post) {
+                actionModule.schemata.postModel.find({}, function(err, post) {
                     test.equal(post.length, 1);
                     test.equal(post[0].blogId.toString(), _id.toString());
                     test.equal(post[0].headline, 'My cat\'s breath smells like cat food');
@@ -345,7 +343,7 @@ exports.savePost = {
 
     'Should not save a document to the collection if not authorized': function(test) {
         test.expect(1);
-        actions.savePost({ resource: 'blogs' },
+        actionModule.actions.savePost({ resource: 'blogs' },
                          { content: { headline: 'My cat\'s breath smells like cat food' } }).
             then(function(blog) {
                 test.ok(false, 'Shouldn\'t get here');
@@ -359,7 +357,7 @@ exports.savePost = {
 
     'Should not barf if the post isn\'t included in the message contents': function(test) {
         test.expect(1);
-        actions.savePost({ resource: 'blogs', write: true }, {}).
+        actionModule.actions.savePost({ resource: 'blogs', write: true }, {}).
             then(function(blog) {
                 test.ok(false, 'Shouldn\'t get here');
                 test.done();
@@ -377,12 +375,12 @@ exports.savePost = {
 exports.deletePost = {
 
     setUp: function(callback) {
-        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        var blog = new actionModule.schemata.blogModel({ title: 'Deep thoughts...' });
         blog.save(function(err, savedBlog) {
             if (err) {
               console.log(err);
             }
-            actions.savePost({ resource: 'blogs', admin: true },
+            actionModule.actions.savePost({ resource: 'blogs', admin: true },
                              { content: {
                                             blogId: _id,
                                             headline: 'My cat\'s breath smells like cat food',
@@ -402,7 +400,7 @@ exports.deletePost = {
 
 
     tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
+        actionModule.schemata.connection.db.dropDatabase(function(err) {
             if (err) {
               console.log(err);
             }
@@ -412,11 +410,11 @@ exports.deletePost = {
 
     'Should delete the post from the database for an authorized user': function(test) {
         test.expect(2);
-        actions.deletePost({ resource: 'blogs', write: true },
+        actionModule.actions.deletePost({ resource: 'blogs', write: true },
                            { content: { id: _id } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.find({}, function(err, posts) {
+                actionModule.schemata.postModel.find({}, function(err, posts) {
                     test.equal(posts.length, 0);
                     test.done();
                   });
@@ -429,11 +427,11 @@ exports.deletePost = {
 
     'Should delete the post from the database for an admin': function(test) {
         test.expect(2);
-        actions.deletePost({ resource: 'blogs', admin: true },
+        actionModule.actions.deletePost({ resource: 'blogs', admin: true },
                            { content: { id: _id } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.find({}, function(err, posts) {
+                actionModule.schemata.postModel.find({}, function(err, posts) {
                     test.equal(posts.length, 0);
                     test.done();
                   });
@@ -446,7 +444,7 @@ exports.deletePost = {
 
     'Should do nothing for an unauthorized agent': function(test) {
         test.expect(1);
-        actions.deletePost({ resource: 'blogs' },
+        actionModule.actions.deletePost({ resource: 'blogs' },
                            { content: { id: _id } }).
             then(function(ack) {
                 test.ok(false, 'Shouldn\'t get here');
@@ -460,10 +458,10 @@ exports.deletePost = {
 
     'Should not barf if the post\'s ID is not included in the message content': function(test) {
         test.expect(1);
-        actions.deletePost({ resource: 'blogs', write: true }, {}).
+        actionModule.actions.deletePost({ resource: 'blogs', write: true }, {}).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.ok(false, 'Shouldn\'t get here');
                     test.done();
                   });
@@ -482,12 +480,12 @@ exports.deletePost = {
 exports.publishPost = {
 
     setUp: function(callback) {
-        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        var blog = new actionModule.schemata.blogModel({ title: 'Deep thoughts...' });
         blog.save(function(err, savedBlog) {
             if (err) {
               console.log(err);
             }
-            actions.savePost({ resource: 'blogs', admin: true },
+            actionModule.actions.savePost({ resource: 'blogs', admin: true },
                              { content: {
                                             blogId: _id,
                                             headline: 'My cat\'s breath smells like cat food',
@@ -507,7 +505,7 @@ exports.publishPost = {
 
 
     tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
+        actionModule.schemata.connection.db.dropDatabase(function(err) {
             if (err) {
               console.log(err);
             }
@@ -517,11 +515,11 @@ exports.publishPost = {
 
     'Should set the post\'s published flag to true for an authorized user': function(test) {
         test.expect(3);
-        actions.publishPost({ resource: 'blogs', write: true },
+        actionModule.actions.publishPost({ resource: 'blogs', write: true },
                             { content: { id: _id, published: true } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.equal(post.headline, 'My cat\'s breath smells like cat food');
                     test.ok(post.published);
                     test.done();
@@ -535,11 +533,11 @@ exports.publishPost = {
 
     'Should set the post\'s published flag to true for an admin': function(test) {
         test.expect(3);
-        actions.publishPost({ resource: 'blogs', write: true },
+        actionModule.actions.publishPost({ resource: 'blogs', write: true },
                             { content: { id: _id, published: true } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.equal(post.headline, 'My cat\'s breath smells like cat food');
                     test.ok(post.published);
                     test.done();
@@ -553,7 +551,7 @@ exports.publishPost = {
 
     'Should do nothing for an unauthorized agent': function(test) {
         test.expect(1);
-        actions.publishPost({ resource: 'blogs' },
+        actionModule.actions.publishPost({ resource: 'blogs' },
                             { content: { id: _id, published: true } }).
             then(function(ack) {
                 test.ok(false, 'Shouldn\'t get here');
@@ -567,10 +565,10 @@ exports.publishPost = {
 
     'Should not barf if the post\'s ID is not included in the message content': function(test) {
         test.expect(1);
-        actions.publishPost({ resource: 'blogs', write: true }, {}).
+        actionModule.actions.publishPost({ resource: 'blogs', write: true }, {}).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.ok(false, 'Shouldn\'t get here');
                     test.done();
                   });
@@ -590,12 +588,12 @@ exports.publishPost = {
 exports.unpublishPost = {
 
     setUp: function(callback) {
-        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        var blog = new actionModule.schemata.blogModel({ title: 'Deep thoughts...' });
         blog.save(function(err, savedBlog) {
             if (err) {
               console.log(err);
             }
-            actions.savePost({ resource: 'blogs', admin: true },
+            actionModule.actions.savePost({ resource: 'blogs', admin: true },
                              { content: {
                                             blogId: _id,
                                             headline: 'My cat\'s breath smells like cat food',
@@ -616,7 +614,7 @@ exports.unpublishPost = {
 
 
     tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
+        actionModule.schemata.connection.db.dropDatabase(function(err) {
             if (err) {
               console.log(err);
             }
@@ -626,11 +624,11 @@ exports.unpublishPost = {
 
     'Should set the post\'s published flag to false for an authorized user': function(test) {
         test.expect(3);
-        actions.publishPost({ resource: 'blogs', write: true },
+        actionModule.actions.publishPost({ resource: 'blogs', write: true },
                             { content: { id: _id, published: false } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.equal(post.headline, 'My cat\'s breath smells like cat food');
                     test.equal(post.published, false);
                     test.done();
@@ -644,11 +642,11 @@ exports.unpublishPost = {
 
     'Should set the post\'s published flag to false for an admin': function(test) {
         test.expect(3);
-        actions.publishPost({ resource: 'blogs', write: true },
+        actionModule.actions.publishPost({ resource: 'blogs', write: true },
                             { content: { id: _id, published: false } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.equal(post.headline, 'My cat\'s breath smells like cat food');
                     test.equal(post.published, false);
                     test.done();
@@ -662,7 +660,7 @@ exports.unpublishPost = {
 
     'Should do nothing for an unauthorized agent': function(test) {
         test.expect(1);
-        actions.publishPost({ resource: 'blogs' },
+        actionModule.actions.publishPost({ resource: 'blogs' },
                             { content: { id: _id, published: false } }).
             then(function(ack) {
                 test.ok(false, 'Shouldn\'t get here');
@@ -676,10 +674,10 @@ exports.unpublishPost = {
 
     'Should not barf if the post\'s ID is not included in the message content': function(test) {
         test.expect(1);
-        actions.publishPost({ resource: 'blogs', write: true }, {}).
+        actionModule.actions.publishPost({ resource: 'blogs', write: true }, {}).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.ok(false, 'Shouldn\'t get here');
                     test.done();
                   });
@@ -697,12 +695,12 @@ exports.unpublishPost = {
 exports.saveComment = {
 
     setUp: function(callback) {
-        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        var blog = new actionModule.schemata.blogModel({ title: 'Deep thoughts...' });
         blog.save(function(err, savedBlog) {
             if (err) {
               console.log(err);
             }
-            actions.savePost({ resource: 'blogs', admin: true },
+            actionModule.actions.savePost({ resource: 'blogs', admin: true },
                              { content: {
                                             blogId: _id,
                                             headline: 'My cat\'s breath smells like cat food',
@@ -722,7 +720,7 @@ exports.saveComment = {
     },
 
     tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
+        actionModule.schemata.connection.db.dropDatabase(function(err) {
             if (err) {
               console.log(err);
             }
@@ -733,7 +731,7 @@ exports.saveComment = {
     'Should save a document to the comment collection for an authorized agent': function(test) {
         test.expect(9);
 
-        actions.saveComment({ resource: 'blogs', write: true },
+        actionModule.actions.saveComment({ resource: 'blogs', write: true },
                             { content: {
                                            postId: _id,
                                            byline: 'Chief Wiggum',
@@ -747,7 +745,7 @@ exports.saveComment = {
                 test.ok(!!comment.date);
 
                 // Make sure the post has been saved 
-                blogDb.commentModel.find({}, function(err, comment) {
+                actionModule.schemata.commentModel.find({}, function(err, comment) {
                     test.equal(comment.length, 1);
                     test.equal(comment[0].postId.toString(), _id.toString());
                     test.equal(comment[0].byline, 'Chief Wiggum');
@@ -765,7 +763,7 @@ exports.saveComment = {
     'Should save a document to the comment collection for an admin': function(test) {
         test.expect(9);
 
-        actions.saveComment({ resource: 'blogs', write: true },
+        actionModule.actions.saveComment({ resource: 'blogs', write: true },
                             { content: {
                                            postId: _id,
                                            byline: 'Chief Wiggum',
@@ -779,7 +777,7 @@ exports.saveComment = {
                 test.ok(!!comment.date);
 
                 // Make sure the post has been saved 
-                blogDb.commentModel.find({}, function(err, comment) {
+                actionModule.schemata.commentModel.find({}, function(err, comment) {
                     test.equal(comment.length, 1);
                     test.equal(comment[0].postId.toString(), _id.toString());
                     test.equal(comment[0].byline, 'Chief Wiggum');
@@ -796,7 +794,7 @@ exports.saveComment = {
 
     'Should not save a document to the collection if not authorized': function(test) {
         test.expect(1);
-        actions.saveComment({ resource: 'blogs' },
+        actionModule.actions.saveComment({ resource: 'blogs' },
                             { content: {
                                            postId: _id,
                                            byline: 'Chief Wiggum',
@@ -815,7 +813,7 @@ exports.saveComment = {
 
     'Should not barf if the post isn\'t included in the message contents': function(test) {
         test.expect(1);
-        actions.saveComment({ resource: 'blogs', write: true }, {}).
+        actionModule.actions.saveComment({ resource: 'blogs', write: true }, {}).
             then(function(blog) {
                 test.ok(false, 'Shouldn\'t get here');
                 test.done();
@@ -834,12 +832,12 @@ exports.saveComment = {
 exports.deleteComment = {
 
     setUp: function(callback) {
-        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        var blog = new actionModule.schemata.blogModel({ title: 'Deep thoughts...' });
         blog.save(function(err, savedBlog) {
             if (err) {
               console.log(err);
             }
-            actions.savePost({ resource: 'blogs', admin: true },
+            actionModule.actions.savePost({ resource: 'blogs', admin: true },
                              { content: {
                                             blogId: savedBlog._id,
                                             headline: 'My cat\'s breath smells like cat food',
@@ -848,7 +846,7 @@ exports.deleteComment = {
                                         }
                              }).
                 then(function(post) {
-                    actions.saveComment({ resource: 'blogs', admin: true },
+                    actionModule.actions.saveComment({ resource: 'blogs', admin: true },
                                         { content: {
                                                        postId: post._id,
                                                        byline: 'Chief Wiggum',
@@ -872,7 +870,7 @@ exports.deleteComment = {
     },
 
     tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
+        actionModule.schemata.connection.db.dropDatabase(function(err) {
             if (err) {
               console.log(err);
             }
@@ -883,11 +881,11 @@ exports.deleteComment = {
 
     'Should delete the comment from the collection for an authorized user': function(test) {
         test.expect(2);
-        actions.deleteComment({ resource: 'blogs', write: true },
+        actionModule.actions.deleteComment({ resource: 'blogs', write: true },
                               { content: { id: _id } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.commentModel.find({}, function(err, comments) {
+                actionModule.schemata.commentModel.find({}, function(err, comments) {
                     test.equal(comments.length, 0);
                     test.done();
                   });
@@ -900,11 +898,11 @@ exports.deleteComment = {
 
     'Should delete the comment from the collection for an admin': function(test) {
         test.expect(2);
-        actions.deleteComment({ resource: 'blogs', admin: true },
+        actionModule.actions.deleteComment({ resource: 'blogs', admin: true },
                               { content: { id: _id } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.commentModel.find({}, function(err, comments) {
+                actionModule.schemata.commentModel.find({}, function(err, comments) {
                     test.equal(comments.length, 0);
                     test.done();
                   });
@@ -917,7 +915,7 @@ exports.deleteComment = {
 
     'Should do nothing for an unauthorized agent': function(test) {
         test.expect(1);
-        actions.deleteComment({ resource: 'blogs' },
+        actionModule.actions.deleteComment({ resource: 'blogs' },
                               { content: { id: _id } }).
             then(function(ack) {
                 test.ok(false, 'Shouldn\'t get here');
@@ -931,10 +929,10 @@ exports.deleteComment = {
 
     'Should not barf if the post\'s ID is not included in the message content': function(test) {
         test.expect(1);
-        actions.deleteComment({ resource: 'blogs', write: true }, {}).
+        actionModule.actions.deleteComment({ resource: 'blogs', write: true }, {}).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.ok(false, 'Shouldn\'t get here');
                     test.done();
                   });
@@ -952,12 +950,12 @@ exports.deleteComment = {
 exports.allowComments = {
 
     setUp: function(callback) {
-        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        var blog = new actionModule.schemata.blogModel({ title: 'Deep thoughts...' });
         blog.save(function(err, savedBlog) {
             if (err) {
               console.log(err);
             }
-            actions.savePost({ resource: 'blogs', admin: true },
+            actionModule.actions.savePost({ resource: 'blogs', admin: true },
                              { content: {
                                             blogId: _id,
                                             headline: 'My cat\'s breath smells like cat food',
@@ -976,7 +974,7 @@ exports.allowComments = {
     },
 
     tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
+        actionModule.schemata.connection.db.dropDatabase(function(err) {
             if (err) {
               console.log(err);
             }
@@ -986,11 +984,11 @@ exports.allowComments = {
 
     'Should set the post\'s published flag to true for an authorized user': function(test) {
         test.expect(3);
-        actions.allowComments({ resource: 'blogs', write: true },
+        actionModule.actions.allowComments({ resource: 'blogs', write: true },
                               { content: { id: _id, allow: true } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.equal(post.headline, 'My cat\'s breath smells like cat food');
                     test.ok(post.commentsAllowed);
                     test.done();
@@ -1004,11 +1002,11 @@ exports.allowComments = {
 
     'Should set the post\'s published flag to true for an admin': function(test) {
         test.expect(3);
-        actions.allowComments({ resource: 'blogs', admin: true },
+        actionModule.actions.allowComments({ resource: 'blogs', admin: true },
                               { content: { id: _id, allow: true } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.equal(post.headline, 'My cat\'s breath smells like cat food');
                     test.ok(post.commentsAllowed);
                     test.done();
@@ -1022,7 +1020,7 @@ exports.allowComments = {
 
     'Should do nothing for an unauthorized agent': function(test) {
         test.expect(1);
-        actions.allowComments({ resource: 'blogs' },
+        actionModule.actions.allowComments({ resource: 'blogs' },
                               { content: { id: _id, allow: true } }).
             then(function(ack) {
                 test.ok(false, 'Shouldn\'t get here');
@@ -1036,10 +1034,10 @@ exports.allowComments = {
 
     'Should not barf if the post\'s ID is not included in the message content': function(test) {
         test.expect(1);
-        actions.allowComments({ resource: 'blogs', write: true }, {}).
+        actionModule.actions.allowComments({ resource: 'blogs', write: true }, {}).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.ok(false, 'Shouldn\'t get here');
                     test.done();
                   });
@@ -1059,12 +1057,12 @@ exports.allowComments = {
 exports.disallowComments = {
 
     setUp: function(callback) {
-        var blog = new blogDb.blogModel({ title: 'Deep thoughts...' });
+        var blog = new actionModule.schemata.blogModel({ title: 'Deep thoughts...' });
         blog.save(function(err, savedBlog) {
             if (err) {
               console.log(err);
             }
-            actions.savePost({ resource: 'blogs', admin: true },
+            actionModule.actions.savePost({ resource: 'blogs', admin: true },
                              { content: {
                                             blogId: _id,
                                             headline: 'My cat\'s breath smells like cat food',
@@ -1084,7 +1082,7 @@ exports.disallowComments = {
     },
 
     tearDown: function(callback) {
-        blogDb.connection.db.dropDatabase(function(err) {
+        actionModule.schemata.connection.db.dropDatabase(function(err) {
             if (err) {
               console.log(err);
             }
@@ -1094,11 +1092,11 @@ exports.disallowComments = {
 
     'Should set the post\'s commentsAllowed flag to true for an authorized user': function(test) {
         test.expect(3);
-        actions.allowComments({ resource: 'blogs', write: true },
+        actionModule.actions.allowComments({ resource: 'blogs', write: true },
                               { content: { id: _id, allow: false } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.equal(post.headline, 'My cat\'s breath smells like cat food');
                     test.equal(post.commentsAllowed, false);
                     test.done();
@@ -1112,11 +1110,11 @@ exports.disallowComments = {
 
     'Should set the post\'s commentsAllowed flag to true for an admin': function(test) {
         test.expect(3);
-        actions.allowComments({ resource: 'blogs', admin: true },
+        actionModule.actions.allowComments({ resource: 'blogs', admin: true },
                               { content: { id: _id, allow: false } }).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.equal(post.headline, 'My cat\'s breath smells like cat food');
                     test.equal(post.commentsAllowed, false);
                     test.done();
@@ -1130,7 +1128,7 @@ exports.disallowComments = {
 
     'Should do nothing for an unauthorized agent': function(test) {
         test.expect(1);
-        actions.allowComments({ resource: 'blogs' },
+        actionModule.actions.allowComments({ resource: 'blogs' },
                               { content: { id: _id, allow: false } }).
             then(function(ack) {
                 test.ok(false, 'Shouldn\'t get here');
@@ -1144,10 +1142,10 @@ exports.disallowComments = {
 
     'Should not barf if the post\'s ID is not included in the message content': function(test) {
         test.expect(1);
-        actions.allowComments({ resource: 'blogs', write: true }, {}).
+        actionModule.actions.allowComments({ resource: 'blogs', write: true }, {}).
             then(function(ack) {
                 test.ok(ack);
-                blogDb.postModel.findById(_id, function(err, post) {
+                actionModule.schemata.postModel.findById(_id, function(err, post) {
                     test.ok(false, 'Shouldn\'t get here');
                     test.done();
                   });
